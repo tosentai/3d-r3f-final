@@ -4,46 +4,68 @@ import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
 /**
- * Внутрішній завантажувач складної 3D моделі (GLTF)
+ * Внутрішній завантажувач складної 3D моделі (GLTF).
+ * 
+ * ВАЖЛИВО:
+ * Автоматичний розрахунок BoundingBox та центрування нормалізує будь-яку 3D-модель
+ * до ідеального розміру (1.35 одиниці), щоб вона акуратно стояла на вівтарі всередині кілець
+ * і ніколи не роздувалася на весь екран!
  */
-function RelicModel({ scale = 1.25 }) {
+function RelicModel({ scale = 1.0 }) {
   const { scene } = useGLTF('/models/celestial-relic.glb')
 
-  const clonedScene = React.useMemo(() => {
-    const clone = scene.clone()
+  const { normalizedScene, finalScale } = React.useMemo(() => {
+    const clone = scene.clone(true)
+
+    // 1. Обчислюємо розміри габаритного контейнера (Bounding Box)
+    const bbox = new THREE.Box3().setFromObject(clone)
+    const size = new THREE.Vector3()
+    bbox.getSize(size)
+    const center = new THREE.Vector3()
+    bbox.getCenter(center)
+
+    // 2. Центруємо модель навколо локального початку координат (0, 0, 0)
+    clone.position.x = -center.x
+    clone.position.y = -center.y
+    clone.position.z = -center.z
+
+    // 3. Нормалізуємо масштаб: модель завжди матиме заданий габарит (1.35)
+    const maxDim = Math.max(size.x, size.y, size.z) || 1.0
+    const desiredSize = 1.35 * scale
+    const calculatedScale = desiredSize / maxDim
+
+    // 4. Налаштовуємо красивий античний PBR матеріал та тіні
     clone.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true
         child.receiveShadow = true
-        if (child.material) {
-          // Античний бронзово-золотий PBR матеріал
-          child.material.color = new THREE.Color('#d4af37')
-          child.material.metalness = 0.85
-          child.material.roughness = 0.28
-          child.material.needsUpdate = true
-        }
+        child.material = new THREE.MeshStandardMaterial({
+          color: new THREE.Color('#f59e0b'),
+          metalness: 0.85,
+          roughness: 0.28,
+          emissive: new THREE.Color('#b45309'),
+          emissiveIntensity: 0.25,
+        })
       }
     })
-    return clone
-  }, [scene])
 
-  // Масштабуємо бюст стародавнього Оракула для розміщення на вівтарі
+    return { normalizedScene: clone, finalScale: calculatedScale }
+  }, [scene, scale])
+
   return (
-    <primitive
-      object={clonedScene}
-      scale={[scale * 1.5, scale * 1.5, scale * 1.5]}
-      position={[0, -0.2, 0]}
-    />
+    <group scale={[finalScale, finalScale, finalScale]}>
+      <primitive object={normalizedScene} />
+    </group>
   )
 }
 
 /**
- * Плейсхолдер кристала (відображається миттєво, доки підвантажується модель)
+ * Плейсхолдер кристала (відображається миттєво доки вантажиться модель)
  */
 function CrystalPlaceholder() {
   return (
     <mesh castShadow receiveShadow>
-      <octahedronGeometry args={[0.75, 0]} />
+      <octahedronGeometry args={[0.7, 0]} />
       <meshPhysicalMaterial
         color="#38bdf8"
         emissive="#0284c7"
@@ -59,7 +81,7 @@ function CrystalPlaceholder() {
 /**
  * CelestialMonolith Component
  */
-export function CelestialMonolith({ position = [0, 1.6, 0], scale = 1.25 }) {
+export function CelestialMonolith({ position = [0, 1.6, 0], scale = 1.0 }) {
   const groupRef = useRef()
   const ring1Ref = useRef()
   const ring2Ref = useRef()
@@ -68,9 +90,9 @@ export function CelestialMonolith({ position = [0, 1.6, 0], scale = 1.25 }) {
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime
-    const rotSpeed = hovered ? 1.5 : 0.4
+    const rotSpeed = hovered ? 1.5 : 0.45
 
-    // Левітація
+    // М'яка левітація
     if (groupRef.current) {
       groupRef.current.position.y = position[1] + Math.sin(t * 1.5) * 0.15
     }
@@ -124,7 +146,7 @@ export function CelestialMonolith({ position = [0, 1.6, 0], scale = 1.25 }) {
           decay={2}
         />
 
-        {/* 1. Складна модель із прогресивним неблокуючим завантаженням */}
+        {/* 1. Складна 3D модель з автоматичним масштабуванням */}
         <group ref={relicRef} position={[0, 0, 0]}>
           <Suspense fallback={<CrystalPlaceholder />}>
             <RelicModel scale={scale} />
@@ -159,5 +181,4 @@ export function CelestialMonolith({ position = [0, 1.6, 0], scale = 1.25 }) {
   )
 }
 
-// Прелоад легкої 462KB моделі
 useGLTF.preload('/models/celestial-relic.glb')
