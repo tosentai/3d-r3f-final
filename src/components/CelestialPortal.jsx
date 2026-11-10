@@ -1,17 +1,17 @@
-import React, { useRef, useMemo } from 'react'
+import React, { useRef, useMemo, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { PortalVertexShader, PortalFragmentShader, defaultPortalUniforms } from '../shaders/portalShader'
+import { PortalVertexShader, PortalFragmentShader } from '../shaders/portalShader'
 
 /**
  * CelestialPortal Component
  * 
- * Втілює вимоги:
- * 1. Кастомний шейдер (GLSL Vertex + Fragment shader)
- * 2. Анімація (процедурна зміна часу `uTime`, пульсація світла)
- * 3. Примітиви (Torus, Cylinder, Box обрамлення)
- * 4. PBR Матеріали (золото, різьблений камінь із roughness та metalness)
- * 5. Джерело світла всередині порталу (PointLight)
+ * Інтерактивність:
+ * - При кліку ЛКМ по порталу відбувається розрив простору:
+ *   1. Розходиться анімована енергетична ударна хвиля (Shockwave Ring).
+ *   2. Швидкість та інтенсивність шейдера різко зростають (Warp Surge).
+ *   3. Ядро порталу яскраво спалахує.
+ *   4. Викликається `onPortalClick`, що викидає з порталу фізичний артефакт!
  */
 export function CelestialPortal({
   position = [0, 4.5, -8],
@@ -20,14 +20,20 @@ export function CelestialPortal({
   speed = 1.2,
   intensity = 1.8,
   distortion = 1.0,
-  active = true
+  active = true,
+  onPortalClick
 }) {
   const meshRef = useRef()
   const lightRef = useRef()
   const outerRingRef = useRef()
   const innerRingRef = useRef()
+  const shockwaveRef = useRef()
 
-  // Клонуємо uniforms для незалежного екземпляра
+  // Коефіцієнт сплеску енергії при кліку (від 1.0 спадає до 0.0)
+  const surgeRef = useRef(0)
+  const [hovered, setHovered] = useState(false)
+
+  // Клонуємо uniforms для шейдера
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uSpeed: { value: speed },
@@ -38,27 +44,58 @@ export function CelestialPortal({
     uColorOuter: { value: new THREE.Color('#8b5cf6') },
   }), [])
 
-  // Оновлюємо uniforms при зміні props
+  // Обробник кліку по порталу
+  const handleClick = (e) => {
+    e.stopPropagation()
+    surgeRef.current = 1.0 // Запускаємо енергетичний сплеск
+
+    if (onPortalClick) {
+      onPortalClick()
+    }
+  }
+
   useFrame((state, delta) => {
+    // Плавне згасання сплеску після кліку
+    surgeRef.current = THREE.MathUtils.lerp(surgeRef.current, 0, delta * 2.2)
+    const surge = surgeRef.current
+
+    const effectiveSpeed = speed * (1.0 + surge * 3.5)
+    const effectiveIntensity = intensity * (1.0 + surge * 2.0)
+    const effectiveDistortion = distortion * (1.0 + surge * 2.5)
+
     if (meshRef.current && active) {
-      meshRef.current.material.uniforms.uTime.value += delta * speed
-      meshRef.current.material.uniforms.uSpeed.value = speed
-      meshRef.current.material.uniforms.uIntensity.value = intensity
-      meshRef.current.material.uniforms.uDistortion.value = distortion
+      meshRef.current.material.uniforms.uTime.value += delta * effectiveSpeed
+      meshRef.current.material.uniforms.uSpeed.value = effectiveSpeed
+      meshRef.current.material.uniforms.uIntensity.value = effectiveIntensity
+      meshRef.current.material.uniforms.uDistortion.value = effectiveDistortion
     }
 
-    // Обертання декоративних священних кілець
+    // Обертання декоративних кілець із прискоренням при сплеску
     if (outerRingRef.current) {
-      outerRingRef.current.rotation.z += delta * 0.25 * speed
+      outerRingRef.current.rotation.z += delta * (0.25 + surge * 2.0)
     }
     if (innerRingRef.current) {
-      innerRingRef.current.rotation.z -= delta * 0.45 * speed
+      innerRingRef.current.rotation.z -= delta * (0.45 + surge * 2.5)
     }
 
-    // Пульсація світла від енергії порталу
+    // Спалах світла в порталі
     if (lightRef.current && active) {
       const pulse = Math.sin(state.clock.elapsedTime * 3.5) * 0.3 + 0.9
-      lightRef.current.intensity = 2.5 * pulse * (intensity / 1.5)
+      lightRef.current.intensity = (2.5 * pulse + surge * 8.0) * (intensity / 1.5)
+      lightRef.current.color.set(surge > 0.3 ? '#a5f3fc' : '#38bdf8')
+    }
+
+    // Анімація ударної хвилі (розширення та згасання прозорості)
+    if (shockwaveRef.current) {
+      if (surge > 0.02) {
+        const progress = 1.0 - surge
+        const currentScale = 1.0 + progress * 4.5
+        shockwaveRef.current.scale.set(currentScale, currentScale, 1)
+        shockwaveRef.current.material.opacity = surge * 0.9
+        shockwaveRef.current.visible = true
+      } else {
+        shockwaveRef.current.visible = false
+      }
     }
   })
 
@@ -69,13 +106,30 @@ export function CelestialPortal({
         ref={lightRef}
         color="#38bdf8"
         intensity={2.5}
-        distance={15}
+        distance={18}
         decay={2}
       />
 
-      {/* Шейдерна мембрана порталу (кастомний ShaderMaterial) */}
-      <mesh ref={meshRef} position={[0, 0, 0]}>
-        {/* CircleGeometry з високою щільністю сегментів для вертексного зміщення */}
+      {/* Ударна хвиля (розширюється при кліку ЛКМ) */}
+      <mesh ref={shockwaveRef} position={[0, 0, 0.05]} visible={false}>
+        <ringGeometry args={[2.7, 3.2, 64]} />
+        <meshBasicMaterial
+          color="#38bdf8"
+          transparent
+          opacity={0}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Інтерактивна шейдерна мембрана порталу */}
+      <mesh
+        ref={meshRef}
+        position={[0, 0, 0]}
+        onClick={handleClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        cursor="pointer"
+      >
         <circleGeometry args={[2.8, 64]} />
         <shaderMaterial
           vertexShader={PortalVertexShader}
@@ -86,6 +140,14 @@ export function CelestialPortal({
           depthWrite={false}
         />
       </mesh>
+
+      {/* Підказка при наведенні (світіння контуру) */}
+      {hovered && (
+        <mesh position={[0, 0, 0.02]}>
+          <ringGeometry args={[2.75, 2.9, 64]} />
+          <meshBasicMaterial color="#67e8f9" transparent opacity={0.6} />
+        </mesh>
+      )}
 
       {/* Примітив: Зовнішнє масивне кам'яне кільце */}
       <mesh castShadow receiveShadow>
@@ -121,9 +183,8 @@ export function CelestialPortal({
         />
       </mesh>
 
-      {/* Опорні кам'яні пілони-п'єдестали (Cylinder & Box примітиви) */}
+      {/* Опорні кам'яні пілони-п'єдестали */}
       <group position={[0, -3.2, 0]}>
-        {/* База вівтаря */}
         <mesh castShadow receiveShadow position={[0, 0, 0]}>
           <boxGeometry args={[3.6, 0.6, 1.4]} />
           <meshStandardMaterial color="#0f172a" roughness={0.7} metalness={0.3} />

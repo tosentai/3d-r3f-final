@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import {
   Sun, Moon, Sunset, Sparkles, Orbit, RotateCcw,
-  Info, Shield, Zap, Compass, Box, Circle, Triangle,
-  Eye, Cpu, Layers
+  Info, Shield, Zap, Box, Circle, Disc,
+  Eye, Cpu, Layers, Trophy, Flame
 } from 'lucide-react'
 
 export function HUD({
@@ -18,7 +18,8 @@ export function HUD({
   portalIntensity,
   setPortalIntensity,
   activeCameraPreset,
-  setCameraPreset
+  setCameraPreset,
+  portalNotification
 }) {
   const [showInfoModal, setShowInfoModal] = useState(false)
   const [fps, setFps] = useState(60)
@@ -46,90 +47,108 @@ export function HUD({
   return (
     <div className="pointer-events-none fixed inset-0 z-20 flex flex-col justify-between p-4 md:p-6 text-white select-none">
       {/* ================= ВЕРХНІЙ БАР ================= */}
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        {/* Логотип та Назва Проекту */}
-        <div className="pointer-events-auto glass-panel rounded-2xl px-5 py-3 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
-            <Sparkles className="w-5 h-5 text-white animate-spin-slow" />
-          </div>
-          <div>
-            <h1 className="font-cinzel text-lg md:text-xl font-bold tracking-wider bg-gradient-to-r from-amber-200 via-sky-200 to-purple-200 bg-clip-text text-transparent">
-              CELESTIAL SANCTUARY
-            </h1>
-            <p className="text-xs text-slate-400 flex items-center gap-2">
-              <span>Three.js / React Three Fiber</span>
-              <span className="w-1 h-1 rounded-full bg-slate-500"></span>
-              <span className="text-emerald-400 font-medium">Rapier WASM Physics</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Метрики та Кнопка Інформації */}
-        <div className="pointer-events-auto flex items-center gap-3">
-          {/* FPS та Статистика */}
-          <div className="glass-panel rounded-2xl px-4 py-2.5 flex items-center gap-4 text-xs font-mono">
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">FPS:</span>
-              <span className={`font-bold ${fps >= 50 ? 'text-emerald-400' : fps >= 30 ? 'text-amber-400' : 'text-red-400'}`}>
-                {fps}
-              </span>
+      <header className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Логотип та Назва Проекту */}
+          <div className="pointer-events-auto glass-panel rounded-2xl px-5 py-3 flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div className="w-[1px] h-4 bg-white/10" />
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">Фізичних тіл:</span>
-              <span className="font-bold text-sky-400">{runeCount}</span>
+            <div>
+              <h1 className="font-cinzel text-lg md:text-xl font-bold tracking-wider bg-gradient-to-r from-amber-200 via-sky-200 to-purple-200 bg-clip-text text-transparent">
+                CELESTIAL SANCTUARY
+              </h1>
+              <p className="text-xs text-slate-400 flex items-center gap-2">
+                <span>Three.js / React Three Fiber</span>
+                <span className="w-1 h-1 rounded-full bg-slate-500"></span>
+                <span className="text-emerald-400 font-medium">Rapier WASM Physics</span>
+              </p>
             </div>
           </div>
 
-          {/* Кнопка "Довідка для Захисту" */}
-          <button
-            onClick={() => setShowInfoModal(true)}
-            className="glass-panel hover:bg-white/15 active:scale-95 transition-all rounded-2xl px-4 py-2.5 flex items-center gap-2 text-xs font-medium text-amber-300 border-amber-500/30 shadow-lg shadow-amber-500/10 cursor-pointer"
-          >
-            <Info className="w-4 h-4 text-amber-400" />
-            <span className="hidden sm:inline">Критерії Проекту</span>
-          </button>
+          {/* Метрики та Кнопка Інформації */}
+          <div className="pointer-events-auto flex items-center gap-3">
+            {/* FPS та Статистика */}
+            <div className="glass-panel rounded-2xl px-4 py-2.5 flex items-center gap-4 text-xs font-mono">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400">FPS:</span>
+                <span className={`font-bold ${fps >= 50 ? 'text-emerald-400' : fps >= 30 ? 'text-amber-400' : 'text-red-400'}`}>
+                  {fps}
+                </span>
+              </div>
+              <div className="w-[1px] h-4 bg-white/10" />
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400">Предметів:</span>
+                <span className="font-bold text-sky-400">{runeCount}</span>
+              </div>
+            </div>
+
+            {/* Кнопка "Довідка для Захисту" */}
+            <button
+              onClick={() => setShowInfoModal(true)}
+              className="glass-panel hover:bg-white/15 active:scale-95 transition-all rounded-2xl px-4 py-2.5 flex items-center gap-2 text-xs font-medium text-amber-300 border-amber-500/30 shadow-lg shadow-amber-500/10 cursor-pointer"
+            >
+              <Info className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Критерії Проекту</span>
+            </button>
+          </div>
         </div>
+
+        {/* Спливаюче сповіщення про активацію порталу */}
+        {portalNotification && (
+          <div className="self-center pointer-events-auto glass-panel border-sky-400/50 bg-sky-950/70 text-sky-200 px-5 py-2.5 rounded-full text-xs font-medium shadow-xl shadow-sky-500/20 animate-bounce flex items-center gap-2">
+            <Zap className="w-4 h-4 text-sky-400 animate-pulse" />
+            <span>{portalNotification}</span>
+          </div>
+        )}
       </header>
 
       {/* ================= НИЖНЯ ПАНЕЛЬ КЕРУВАННЯ ================= */}
       <footer className="flex flex-col gap-3 max-w-4xl mx-auto w-full">
         {/* Панель інструментів */}
         <div className="pointer-events-auto glass-panel rounded-3xl p-3 md:p-4 flex flex-wrap items-center justify-between gap-3 shadow-2xl">
-          {/* 1. Спавн фізичних рун */}
+          {/* 1. Спавн реальних предметів */}
           <div className="flex items-center gap-1.5 bg-black/30 p-1.5 rounded-2xl border border-white/5">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-2 hidden sm:inline">
               Спавн:
             </span>
             <button
-              onClick={() => onSpawnRune('cube')}
-              className="glass-pill rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-sky-300 hover:text-white"
-              title="Спавнити куб з фізикою"
+              onClick={() => onSpawnRune('chest')}
+              className="glass-pill rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-amber-300 hover:text-white"
+              title="Спавнити стародавню рунічну скриню"
             >
-              <Box className="w-3.5 h-3.5 text-sky-400" />
-              <span>Куб</span>
+              <Box className="w-3.5 h-3.5 text-amber-400" />
+              <span>Скриня</span>
             </button>
             <button
-              onClick={() => onSpawnRune('sphere')}
-              className="glass-pill rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-pink-300 hover:text-white"
-              title="Спавнити сферу з фізикою"
+              onClick={() => onSpawnRune('orb')}
+              className="glass-pill rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-sky-300 hover:text-white"
+              title="Спавнити астральну сферу"
             >
-              <Circle className="w-3.5 h-3.5 text-pink-400" />
+              <Circle className="w-3.5 h-3.5 text-sky-400" />
               <span>Сфера</span>
             </button>
             <button
-              onClick={() => onSpawnRune('pyramid')}
-              className="glass-pill rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-amber-300 hover:text-white"
-              title="Спавнити піраміду з фізикою"
+              onClick={() => onSpawnRune('chalice')}
+              className="glass-pill rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-pink-300 hover:text-white"
+              title="Спавнити сакральну чашу"
             >
-              <Triangle className="w-3.5 h-3.5 text-amber-400" />
-              <span>Піраміда</span>
+              <Trophy className="w-3.5 h-3.5 text-pink-400" />
+              <span>Чаша</span>
+            </button>
+            <button
+              onClick={() => onSpawnRune('obelisk')}
+              className="glass-pill rounded-xl px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium text-emerald-300 hover:text-white"
+              title="Спавнити рунічний обеліск"
+            >
+              <Disc className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Обеліск</span>
             </button>
             {runeCount > 0 && (
               <button
                 onClick={onClearRunes}
                 className="glass-pill rounded-xl px-2.5 py-1.5 text-xs text-red-400 hover:text-red-200"
-                title="Очистити спавнені об'єкти"
+                title="Очистити спавнені предмети"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -206,9 +225,9 @@ export function HUD({
           </div>
         </div>
 
-        {/* Підказка щодо керування */}
+        {/* Підказка щодо керування та інтерактивності */}
         <p className="text-center text-[11px] text-slate-400 tracking-wide">
-          ЛКМ + Потягнути: Обертання сцени • Колесо: Наближення • ПКМ: Панорамування • Клік по руні: Фізичний поштовх
+          ✨ <strong className="text-sky-300">Клікніть ЛКМ прямо по порталу</strong> для активації ударної хвилі • ЛКМ по предметах: поштовх • Обертайте і зумте камеру без обмежень!
         </p>
       </footer>
 
@@ -242,7 +261,7 @@ export function HUD({
                   1. Примітиви (Primitives)
                 </div>
                 <p className="text-slate-300">
-                  Використано <code>CylinderGeometry</code> (античні колони, основи вівтарів, верхня тераса), <code>BoxGeometry</code> (сходи, постаменти), <code>ConeGeometry</code> (нижня скеля острова, піраміди), <code>SphereGeometry</code> (магічні сфери), <code>TorusGeometry</code> (орбітальні сакральні кільця порталу та реліквії), <code>OctahedronGeometry</code> (кристали).
+                  Використано геометричні примітиви Three.js: <code>CylinderGeometry</code> (античні колони, тераса, основа скрині та чаш), <code>BoxGeometry</code> (сходи, постаменти, корпус скрині), <code>ConeGeometry</code> (скеляста основа острова, вістря обелісків), <code>SphereGeometry</code> (астральні сфери, полум'я), <code>TorusGeometry</code> (орбітальні сакральні кільця порталу та реліквії), <code>OctahedronGeometry</code> (ширяючі кристали).
                 </p>
               </div>
 
@@ -252,7 +271,7 @@ export function HUD({
                   2. Складні моделі (Complex Models)
                 </div>
                 <p className="text-slate-300">
-                  Інтегровано GLTF/GLB модель високої полігональності <code>celestial-relic.glb</code> з повноцінною ієрархією вузлів, текстурними атласами PBR та збереженням геометрії у пам'яті за допомогою <code>useGLTF.preload</code>.
+                  Інтегровано GLTF/GLB модель високої полігональності <code>celestial-relic.glb</code> (PBR metallic-roughness workflow, normal/occlusion maps, 3.59 MB) через хук <code>useGLTF</code> з оптимізованим попереднім завантаженням (<code>preload</code>).
                 </p>
               </div>
 
@@ -262,7 +281,7 @@ export function HUD({
                   3. Матеріали (Materials)
                 </div>
                 <p className="text-slate-300">
-                  Налаштовано PBR матеріали <code>MeshStandardMaterial</code> (параметри metalness/roughness для каменю й металів), <code>MeshPhysicalMaterial</code> для кристалів (із <code>transmission=0.9</code>, <code>ior=1.52</code>, <code>thickness</code> для оптичного заломлення світла) та матеріали з <code>emissive</code> світінням.
+                  PBR матеріали <code>MeshStandardMaterial</code> (metalness/roughness для каменя, золота, деревини скринь), <code>MeshPhysicalMaterial</code> для астральних сфер і кристалів (із <code>transmission=0.85</code>, <code>ior=1.52</code>, <code>thickness</code> для оптичного заломлення світла) та <code>emissive</code> матеріали зі світінням.
                 </p>
               </div>
 
@@ -272,7 +291,7 @@ export function HUD({
                   4. Освітлення та Тіні (Lighting & Shadows)
                 </div>
                 <p className="text-slate-300">
-                  Комбінація трьох джерел: <code>DirectionalLight</code> (Сонце) з мапою тіней 2048x2048, <code>shadow-bias=-0.00015</code> (ліквідує shadow acne) та <code>shadow-normalBias=0.02</code>; <code>HemisphereLight</code> (градієнт неба та землі); локальні <code>PointLight</code> з мерехтінням всередині порталу й жертовників; м'які контактні тіні <code>ContactShadows</code>.
+                  Комбінація: <code>DirectionalLight</code> (збалансоване сонце з картою тіней 2048x2048, <code>shadow-bias=-0.00015</code>, <code>shadow-normalBias=0.02</code>); <code>HemisphereLight</code>; локальні <code>PointLight</code> з мерехтінням; м'які контактні тіні <code>ContactShadows</code> під островом.
                 </p>
               </div>
 
@@ -282,7 +301,7 @@ export function HUD({
                   5. Фізика (Physics - Rapier)
                 </div>
                 <p className="text-slate-300">
-                  Використано WebAssembly-двигун <code>@react-three/rapier</code>: поверхня острова є фіксованим колайдером <code>type="fixed"</code>; руни мають динамічну масу, коефіцієнт пружності (restitution) та тертя; реалізовано зміну вектора гравітації в реальному часі та імпульсні поштовхи при взаємодії.
+                  WebAssembly-двигун <code>@react-three/rapier</code>: тераса острова має статичний колайдер <code>type="fixed"</code>; рунічні скрині, астральні сфери, чаші та обеліски мають динамічну масу, пружність та тертя. Реалізовано зміну гравітації, поштовхи при кліку миші та ударну хвилю порталу.
                 </p>
               </div>
 
@@ -292,7 +311,7 @@ export function HUD({
                   6. Кастомний GLSL Шейдер (Shader)
                 </div>
                 <p className="text-slate-300">
-                  Написано власний GLSL шейдер: <strong>Vertex Shader</strong> деформує мембрану порталу тригонометричними хвилями вздовж нормалей; <strong>Fragment Shader</strong> реалізує полярні координати, спіральний вихор (Swirl), процедурний FBM-шум (Fractal Brownian Motion), енергетичні концентричні кільця та кутове світіння Френеля (Fresnel rim glow).
+                  Власний GLSL шейдер: <strong>Vertex Shader</strong> деформує мембрану порталу тригонометричними хвилями вздовж нормалей; <strong>Fragment Shader</strong> реалізує полярні координати, спіральний вихор (Swirl), FBM-шум, кільця та кутове світіння Френеля (Fresnel). Інтерактивно реагує на клік ЛКМ.
                 </p>
               </div>
 
@@ -302,7 +321,7 @@ export function HUD({
                   7. Високоякісний рендер (Render & Postprocessing)
                 </div>
                 <p className="text-slate-300">
-                  Рендерер налаштовано з <code>ACESFilmicToneMapping</code>, <code>antialias</code>, <code>dpr=[1, 2]</code>. Пайплайн пост-процесингу включає вибірковий <code>Bloom</code> з розмиттям mipmapBlur, кінематографічну <code>Vignette</code> та хроматичну дисперсію.
+                  Рендерер <code>ACESFilmicToneMapping</code>, <code>outputColorSpace=SRGBColorSpace</code>. Пост-процесинг з вибірковим <code>Bloom</code> (поріг 0.82 запобігає пересвіту неба), <code>Vignette</code> та хроматичною аберацією.
                 </p>
               </div>
             </div>

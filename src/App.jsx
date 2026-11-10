@@ -1,13 +1,40 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useRef } from 'react'
 import confetti from 'canvas-confetti'
 import { Scene } from './components/Scene'
 import { HUD } from './components/UI/HUD'
 
-// Початкові руни для наповнення сцени
+// Початкові предмети на святилищі
 const initialRunes = [
-  { id: 1, type: 'cube', position: [-2.2, 2.5, -2.5], color: '#38bdf8', emissive: '#0284c7', size: 0.75, mass: 1.5, restitution: 0.3 },
-  { id: 2, type: 'sphere', position: [2.5, 3.0, -1.8], color: '#ec4899', emissive: '#be185d', size: 0.7, mass: 1.0, restitution: 0.6 },
-  { id: 3, type: 'pyramid', position: [0.2, 4.0, 2.8], color: '#f59e0b', emissive: '#d97706', size: 0.8, mass: 1.2, restitution: 0.4 },
+  {
+    id: 1,
+    type: 'chest',
+    position: [-2.2, 2.0, -2.5],
+    color: '#f59e0b',
+    emissive: '#d97706',
+    size: 0.9,
+    mass: 2.0,
+    restitution: 0.25,
+  },
+  {
+    id: 2,
+    type: 'orb',
+    position: [2.5, 2.5, -1.8],
+    color: '#38bdf8',
+    emissive: '#0284c7',
+    size: 1.0,
+    mass: 1.2,
+    restitution: 0.65,
+  },
+  {
+    id: 3,
+    type: 'chalice',
+    position: [0.0, 3.0, 2.6],
+    color: '#ec4899',
+    emissive: '#be185d',
+    size: 0.95,
+    mass: 1.4,
+    restitution: 0.35,
+  },
 ]
 
 export default function App() {
@@ -17,6 +44,9 @@ export default function App() {
   const [portalSpeed, setPortalSpeed] = useState(1.2)
   const [portalIntensity, setPortalIntensity] = useState(1.8)
   const [runes, setRunes] = useState(initialRunes)
+  const [portalNotification, setPortalNotification] = useState(null)
+
+  const physicsApiRef = useRef(null)
 
   // Вектор гравітації відповідно до обраного режиму
   const gravity = {
@@ -25,18 +55,18 @@ export default function App() {
     zero: [0, 2.8, 0], // Антигравітаційне підняття уламків у повітря!
   }[gravityPreset] || [0, -9.81, 0]
 
-  // Додавання нової руни з випадковими параметрами
+  // Додавання нового предмета (скриня, сфера, чаша, обеліск)
   const handleSpawnRune = useCallback((type) => {
     const id = Date.now() + Math.random()
-    // Випадкова позиція над платформою острова
-    const x = (Math.random() - 0.5) * 6
-    const z = (Math.random() - 0.5) * 6
+    const x = (Math.random() - 0.5) * 5.5
+    const z = (Math.random() - 0.5) * 5.5
     const y = Math.random() * 2 + 5
 
     const colorPalettes = {
-      cube: ['#38bdf8', '#0ea5e9', '#60a5fa', '#818cf8'],
-      sphere: ['#f43f5e', '#ec4899', '#d946ef', '#a855f7'],
-      pyramid: ['#f59e0b', '#eab308', '#84cc16', '#10b981'],
+      chest: ['#f59e0b', '#d97706', '#b45309'],
+      orb: ['#38bdf8', '#0ea5e9', '#67e8f9', '#a855f7'],
+      chalice: ['#fbbf24', '#f43f5e', '#ec4899', '#c084fc'],
+      obelisk: ['#10b981', '#34d399', '#06b6d4', '#6366f1'],
     }
 
     const colors = colorPalettes[type] || ['#38bdf8']
@@ -48,23 +78,69 @@ export default function App() {
       position: [x, y, z],
       color,
       emissive: color,
-      size: Math.random() * 0.3 + 0.6,
-      mass: Math.random() * 1.5 + 0.8,
-      restitution: type === 'sphere' ? 0.65 : 0.35,
+      size: Math.random() * 0.25 + 0.85,
+      mass: type === 'chest' ? 2.2 : type === 'obelisk' ? 1.8 : 1.2,
+      restitution: type === 'orb' ? 0.7 : 0.35,
       friction: 0.7,
     }
 
     setRunes((prev) => [...prev, newRune])
 
-    // Міні-конфетті ефект на UI
-    if (Math.random() > 0.7) {
+    // Ефект конфетті
+    if (Math.random() > 0.6) {
       confetti({
-        particleCount: 20,
-        spread: 40,
+        particleCount: 25,
+        spread: 45,
         origin: { y: 0.85 },
         colors: [color, '#ffffff']
       })
     }
+  }, [])
+
+  // Клік по порталу: гравітаційна хвиля та виліт нового предмета
+  const handlePortalClick = useCallback(() => {
+    // 1. Ударна хвиля відштовхує всі існуючі предмети на острові
+    if (physicsApiRef.current) {
+      physicsApiRef.current.applyShockwave([0, 4.4, -8], 14)
+    }
+
+    // 2. Портал викидає новий магічний артефакт уперед
+    const types = ['chest', 'orb', 'chalice', 'obelisk']
+    const randomType = types[Math.floor(Math.random() * types.length)]
+    const newId = Date.now()
+
+    const launchedItem = {
+      id: newId,
+      type: randomType,
+      position: [ (Math.random() - 0.5) * 1.5, 4.4, -7.0 ],
+      initialImpulse: {
+        x: (Math.random() - 0.5) * 3,
+        y: Math.random() * 2 + 2.5,
+        z: Math.random() * 3 + 8.5, // Потужний політ уперед на терасу острова!
+      },
+      color: '#38bdf8',
+      emissive: '#0284c7',
+      size: 1.0,
+      mass: 1.5,
+      restitution: randomType === 'orb' ? 0.75 : 0.4,
+      friction: 0.6,
+    }
+
+    setRunes((prev) => [...prev, launchedItem])
+
+    // 3. Святковий спалах частинок
+    confetti({
+      particleCount: 40,
+      spread: 60,
+      origin: { x: 0.5, y: 0.45 },
+      colors: ['#38bdf8', '#818cf8', '#f59e0b', '#ffffff']
+    })
+
+    // 4. Повідомлення на екрані
+    setPortalNotification('🌌 Портал активовано: ударна хвиля та матеріалізація артефакту!')
+    setTimeout(() => {
+      setPortalNotification(null)
+    }, 3500)
   }, [])
 
   // Очищення рун
@@ -82,6 +158,8 @@ export default function App() {
         portalSpeed={portalSpeed}
         portalIntensity={portalIntensity}
         cameraPreset={cameraPreset}
+        onPortalClick={handlePortalClick}
+        physicsApiRef={physicsApiRef}
       />
 
       {/* Інтерфейс користувача (HUD) */}
@@ -99,6 +177,7 @@ export default function App() {
         setPortalIntensity={setPortalIntensity}
         activeCameraPreset={cameraPreset}
         setCameraPreset={setCameraPreset}
+        portalNotification={portalNotification}
       />
     </main>
   )

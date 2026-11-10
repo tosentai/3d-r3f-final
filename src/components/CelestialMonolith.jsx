@@ -140,3 +140,4 @@ export function CelestialMonolith({ position = [0, 1.8, 0], scale = 1.3 }) {
 
 // Попереднє завантаження моделі в пам'ять (preload)
 useGLTF.preload('/models/celestial-relic.glb')
+

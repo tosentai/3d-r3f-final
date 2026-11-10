@@ -5,43 +5,40 @@ import * as THREE from 'three'
 /**
  * PostProcessingEffects Component
  * 
- * Втілює вимоги:
- * 1. Максимально якісно налаштований рендер:
- *    - Bloom: вибіркове розсіювання яскравих пікселів (неонові руни, ядро порталу, вогонь у жертовниках).
- *    - Vignette: оптичне затемнення країв кадру для кінематографічного фокусування на центрі святилища.
- *    - ToneMapping (ACES Filmic): професійна кінокорекція кольорів, що запобігає перепаленим білим пікселям.
- *    - ChromaticAberration: тонке лінзове розщеплення спектра для відчуття високої магії/квантової аномалії.
+ * Налаштування:
+ * - luminanceThreshold={0.82} гарантує, що світяться виключно яскраві руни,
+ *   портал та вогонь, а небосхил залишається чистим і не сліпить.
  */
 export function PostProcessingEffects({
   enableBloom = true,
   enableVignette = true,
   enableChromatic = false,
-  bloomIntensity = 1.2
+  bloomIntensity = 0.8
 }) {
   return (
     <EffectComposer disableNormalPass multisampling={4}>
-      {/* 1. Світіння (Bloom) */}
+      {/* 1. М'яке вибіркове світіння (Bloom) */}
       {enableBloom && (
         <Bloom
-          luminanceThreshold={0.6}
-          luminanceSmoothing={0.3}
+          luminanceThreshold={0.82}
+          luminanceSmoothing={0.2}
           mipmapBlur={true}
           intensity={bloomIntensity}
         />
       )}
 
-      {/* 2. Віньєтка (Vignette) */}
+      {/* 2. Кінематографічна віньєтка */}
       {enableVignette && (
         <Vignette
-          offset={0.2}
-          darkness={0.75}
+          offset={0.25}
+          darkness={0.7}
         />
       )}
 
-      {/* 3. Хроматична аберація (опціонально для перевантаження порталу) */}
+      {/* 3. Хроматична аберація */}
       {enableChromatic && (
         <ChromaticAberration
-          offset={new THREE.Vector2(0.002, 0.002)}
+          offset={new THREE.Vector2(0.0015, 0.0015)}
           radialModulation={true}
           modulationOffset={0.5}
         />

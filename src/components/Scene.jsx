@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, Suspense } from 'react'
+import React, { useRef, useEffect, useState, Suspense } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei'
 import { Physics } from '@react-three/rapier'
@@ -12,11 +12,19 @@ import { LightingAndAtmosphere } from './LightingAndAtmosphere'
 import { PostProcessingEffects } from './PostProcessingEffects'
 
 /**
- * Анімований контролер позиції камери для плавного перемикання ракурсів
+ * Анімований контролер позиції камери.
+ * 
+ * ВАЖЛИВО:
+ * Інтерполяція (lerp) відбувається ТІЛЬКИ при перемиканні пресету (кнопки в UI).
+ * Як тільки користувач торкається миші (обертання, зум, панорамування),
+ * інтерполяція миттєво вимикається, даючи 100% повну свободу огляду без відкату назад!
  */
 function CameraRig({ preset = 'default' }) {
   const { camera } = useThree()
   const controlsRef = useRef()
+  const isTransitioningRef = useRef(false)
+  const lastPresetRef = useRef(preset)
+  const transitionTimeRef = useRef(0)
 
   const targetPositions = {
     default: new THREE.Vector3(0, 7.5, 17),
@@ -30,15 +38,46 @@ function CameraRig({ preset = 'default' }) {
     monolith: new THREE.Vector3(0, 2.0, 0),
   }
 
-  const desiredPos = targetPositions[preset] || targetPositions.default
-  const desiredLookAt = targetLookAts[preset] || targetLookAts.default
+  // При зміні пресету запускаємо плавну анімацію переходу
+  useEffect(() => {
+    if (preset !== lastPresetRef.current) {
+      lastPresetRef.current = preset
+      isTransitioningRef.current = true
+      transitionTimeRef.current = 0
+    }
+  }, [preset])
+
+  // Якщо користувач сам почав крутити або зумити камеру - вимикаємо авто-перехід
+  useEffect(() => {
+    const controls = controlsRef.current
+    if (!controls) return
+
+    const handleStart = () => {
+      isTransitioningRef.current = false
+    }
+
+    controls.addEventListener('start', handleStart)
+    return () => controls.removeEventListener('start', handleStart)
+  }, [])
 
   useFrame((_, delta) => {
-    // Плавна інтерполяція (lerp) положення камери та цілі
-    camera.position.lerp(desiredPos, delta * 2.5)
+    if (!isTransitioningRef.current) return
+
+    const desiredPos = targetPositions[preset] || targetPositions.default
+    const desiredLookAt = targetLookAts[preset] || targetLookAts.default
+
+    transitionTimeRef.current += delta
+
+    // Плавний перехід камери до цільового положення
+    camera.position.lerp(desiredPos, delta * 3.5)
     if (controlsRef.current) {
-      controlsRef.current.target.lerp(desiredLookAt, delta * 2.5)
+      controlsRef.current.target.lerp(desiredLookAt, delta * 3.5)
       controlsRef.current.update()
+    }
+
+    // Завершуємо перехід, коли камера наблизилася або минуло 1.5 секунди
+    if (camera.position.distanceTo(desiredPos) < 0.1 || transitionTimeRef.current > 1.5) {
+      isTransitioningRef.current = false
     }
   })
 
@@ -46,10 +85,10 @@ function CameraRig({ preset = 'default' }) {
     <OrbitControls
       ref={controlsRef}
       enableDamping={true}
-      dampingFactor={0.05}
-      minDistance={3.5}
-      maxDistance={45}
-      maxPolarAngle={Math.PI / 2 + 0.05} // Не опускатися занадто глибоко під горизонт
+      dampingFactor={0.06}
+      minDistance={3.0}
+      maxDistance={50}
+      maxPolarAngle={Math.PI / 2 + 0.1}
     />
   )
 }
@@ -80,7 +119,9 @@ export function Scene({
   onRuneClick,
   portalSpeed,
   portalIntensity,
-  cameraPreset
+  cameraPreset,
+  onPortalClick,
+  physicsApiRef
 }) {
   return (
     <div className="w-full h-full absolute inset-0">
@@ -90,12 +131,12 @@ export function Scene({
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.05,
+          toneMappingExposure: 0.95, // Оптимізована експозиція без засліплення
           outputColorSpace: THREE.SRGBColorSpace,
           powerPreference: 'high-performance'
         }}
       >
-        {/* Контролер камери з підтримкою пресетів */}
+        {/* Контролер камери */}
         <CameraRig preset={cameraPreset} />
 
         {/* Динамічне освітлення, атмосфера та тіні */}
@@ -111,22 +152,27 @@ export function Scene({
             {/* Складна 3D модель артефакту (GLTF) на вівтарі */}
             <CelestialMonolith position={[0, 1.6, 0]} scale={1.25} />
 
-            {/* Кастомний GLSL Шейдер порталу */}
+            {/* Кастомний GLSL Шейдер порталу з інтерактивним кліком */}
             <CelestialPortal
               position={[0, 4.4, -8]}
               speed={portalSpeed}
               intensity={portalIntensity}
+              onPortalClick={onPortalClick}
             />
 
-            {/* Фізичні об'єкти (руни, куби, сфери) */}
-            <PhysicsRunes runes={runes} onRuneClick={onRuneClick} />
+            {/* Фізичні об'єкти (скрині, сфери, чаші, обеліски) */}
+            <PhysicsRunes
+              runes={runes}
+              onRuneClick={onRuneClick}
+              physicsApiRef={physicsApiRef}
+            />
           </Physics>
 
           {/* Кінематографічні пост-ефекти рендера */}
           <PostProcessingEffects
             enableBloom={true}
             enableVignette={true}
-            bloomIntensity={timeOfDay === 'night' ? 1.5 : 1.1}
+            bloomIntensity={timeOfDay === 'night' ? 1.0 : 0.75}
           />
         </Suspense>
       </Canvas>

@@ -152,3 +152,4 @@ export const defaultPortalUniforms = {
   uColorInner: { value: new THREE.Color('#38bdf8') }, // Небесно-блакитна плазма
   uColorOuter: { value: new THREE.Color('#8b5cf6') }, // Містичний фіолетовий край
 }
+

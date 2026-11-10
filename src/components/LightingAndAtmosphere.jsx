@@ -1,67 +1,60 @@
 import React, { useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
 import { Sky, Sparkles, ContactShadows, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 
 /**
  * LightingAndAtmosphere Component
  * 
- * Втілює вимоги:
- * 1. Освітлення (Lighting):
- *    - DirectionalLight: основне джерело сонячного/місячного світла.
- *    - HemisphereLight: природне світло небосхилу та відбиття від землі.
- *    - PointLight: локальні джерела світіння магічних елементів.
- * 2. Тіні (Shadows):
- *    - Високоякісна тіньова карта (2048x2048) з точним frustum для максимальної чіткості.
- *    - Тонке налаштування `shadow-bias` (-0.0001) та `shadow-normalBias` (0.02) для усунення артефактів "shadow acne".
- *    - ContactShadows під островом для реалістичного м'якого затінення підвішених об'єктів.
- * 3. Динамічна зміна доби (Day / Sunset / Night).
+ * Налаштування збалансованого освітлення:
+ * - Прибрано засліплюючу яскравість (знижено rayleigh та mie у Sky).
+ * - Сонце дає м'яке кінематографічне світло без перепаленого білого неба.
+ * - Чіткі реалістичні тіні з PCFSoftShadowMap.
  */
 export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
   const sunLightRef = useRef()
 
-  // Колірні та інтенсивні конфігурації для різних часів доби
+  // М'які, приємні для очей конфігурації доби
   const config = {
     noon: {
-      sunColor: '#fffbeb',
-      sunIntensity: 2.2,
-      sunPos: [15, 22, 10],
-      skyColor: '#38bdf8',
+      sunColor: '#fef3c7',
+      sunIntensity: 1.15,
+      sunPos: [10, 16, 8],
+      skyColor: '#60a5fa',
       groundColor: '#1e293b',
-      hemiIntensity: 0.7,
-      turbidity: 4,
-      rayleigh: 0.6,
-      mieCoefficient: 0.005,
-      mieDirectionalG: 0.8,
+      hemiIntensity: 0.5,
+      turbidity: 2.5,
+      rayleigh: 0.28,
+      mieCoefficient: 0.002,
+      mieDirectionalG: 0.65,
       sparkleColor: '#38bdf8',
-      fogColor: '#0f172a',
+      fogColor: '#090e1a',
     },
     sunset: {
-      sunColor: '#fdba74',
-      sunIntensity: 2.0,
-      sunPos: [20, 8, -12],
-      skyColor: '#c084fc',
-      groundColor: '#3b0764',
-      hemiIntensity: 0.55,
-      turbidity: 8,
-      rayleigh: 2.5,
-      mieCoefficient: 0.025,
-      mieDirectionalG: 0.95,
-      sparkleColor: '#fcd34d',
-      fogColor: '#1e112a',
+      sunColor: '#fb923c',
+      sunIntensity: 0.95,
+      sunPos: [14, 5, -12],
+      skyColor: '#a855f7',
+      groundColor: '#2e1065',
+      hemiIntensity: 0.4,
+      turbidity: 4.2,
+      rayleigh: 0.65,
+      mieCoefficient: 0.005,
+      mieDirectionalG: 0.75,
+      sparkleColor: '#fbbf24',
+      fogColor: '#120a1c',
     },
     night: {
       sunColor: '#93c5fd',
-      sunIntensity: 0.8,
-      sunPos: [-12, 18, 12],
+      sunIntensity: 0.55,
+      sunPos: [-10, 16, 10],
       skyColor: '#1e3a8a',
       groundColor: '#020617',
-      hemiIntensity: 0.35,
+      hemiIntensity: 0.3,
       turbidity: 10,
       rayleigh: 0.2,
       mieCoefficient: 0.001,
       mieDirectionalG: 0.5,
-      sparkleColor: '#67e8f9',
+      sparkleColor: '#38bdf8',
       fogColor: '#030712',
     },
   }[timeOfDay] || config.sunset
@@ -70,7 +63,7 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
     <>
       {/* Атмосферний туман для глибини сцени */}
       <color attach="background" args={[config.fogColor]} />
-      <fog attach="fog" args={[config.fogColor, 20, 75]} />
+      <fog attach="fog" args={[config.fogColor, 22, 80]} />
 
       {/* 1. Напівсферичне розсіяне світло (HemisphereLight) */}
       <hemisphereLight
@@ -102,10 +95,10 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
       <directionalLight
         position={[-config.sunPos[0], -config.sunPos[1] * 0.5, -config.sunPos[2]]}
         color={config.skyColor}
-        intensity={0.3}
+        intensity={0.25}
       />
 
-      {/* 4. Небосхил (Sky) або Зоряне небо (Stars) залежно від часу доби */}
+      {/* 4. Небосхил (Sky) або Зоряне небо (Stars) */}
       {timeOfDay === 'night' ? (
         <Stars radius={80} depth={50} count={3500} factor={4} saturation={0.5} fade speed={1} />
       ) : (
@@ -120,18 +113,18 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
 
       {/* 5. Магічні світлові пилинки/частинки в повітрі */}
       <Sparkles
-        count={100}
+        count={80}
         scale={20}
-        size={3.5}
-        speed={0.35}
-        opacity={0.65}
+        size={3}
+        speed={0.3}
+        opacity={0.55}
         color={config.sparkleColor}
       />
 
       {/* 6. Контактні м'які тіні під островом */}
       <ContactShadows
         position={[0, -7.5, 0]}
-        opacity={0.7}
+        opacity={0.65}
         scale={28}
         blur={2}
         far={15}

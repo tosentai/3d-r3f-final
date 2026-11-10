@@ -299,3 +299,4 @@ function Brazier({ position }) {
     </group>
   )
 }
+
