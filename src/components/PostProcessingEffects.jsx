@@ -13,14 +13,14 @@ export function PostProcessingEffects({
   enableBloom = true,
   enableVignette = true,
   enableChromatic = false,
-  bloomIntensity = 0.8
+  bloomIntensity = 0.35
 }) {
   return (
     <EffectComposer disableNormalPass multisampling={0}>
       {/* 1. М'яке вибіркове світіння (Bloom) */}
       {enableBloom && (
         <Bloom
-          luminanceThreshold={0.82}
+          luminanceThreshold={0.9}
           luminanceSmoothing={0.2}
           mipmapBlur={true}
           intensity={bloomIntensity}

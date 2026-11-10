@@ -17,7 +17,6 @@ import * as THREE from 'three'
  */
 export function FloatingIsland() {
   const islandGroupRef = useRef()
-  const crystalGroupRef = useRef()
   const satellite1Ref = useRef()
   const satellite2Ref = useRef()
 
@@ -28,10 +27,6 @@ export function FloatingIsland() {
       islandGroupRef.current.position.y = Math.sin(t * 0.8) * 0.25
       islandGroupRef.current.rotation.z = Math.sin(t * 0.4) * 0.015
       islandGroupRef.current.rotation.x = Math.cos(t * 0.5) * 0.01
-    }
-
-    if (crystalGroupRef.current) {
-      crystalGroupRef.current.rotation.y = t * 0.5
     }
 
     // Обертання малих супутникових островів навколо головного
@@ -145,48 +140,10 @@ export function FloatingIsland() {
 
       {/* Повалена зруйнована колона на землі */}
       <group position={[4.0, 0.4, 2.8]} rotation={[0.2, 0.6, 1.57]}>
-        <mesh castShadow receiveShadow>
+        <mesh receiveShadow>
           <cylinderGeometry args={[0.42, 0.42, 3.2, 16]} />
           <meshStandardMaterial color="#64748b" roughness={0.85} />
         </mesh>
-      </group>
-
-      {/* ================= МАГІЧНІ КРИСТАЛИ (MeshPhysicalMaterial) ================= */}
-      <group ref={crystalGroupRef} position={[0, 2.4, 0]}>
-        {/* Центральний ширяючий кристалічний октаедр */}
-        <mesh castShadow receiveShadow position={[0, 0, 0]}>
-          <octahedronGeometry args={[0.9, 0]} />
-          <meshPhysicalMaterial
-            color="#38bdf8"
-            roughness={0.05}
-            metalness={0.1}
-            transmission={0.9} // Ефект прозорості та заломлення світла
-            ior={1.52}         // Показник заломлення (скло/кварц)
-            thickness={1.2}
-            emissive="#0284c7"
-            emissiveIntensity={0.6}
-          />
-        </mesh>
-
-        {/* Дрібні кристалічні уламки навколо */}
-        {[0, 1.57, 3.14, 4.71].map((angle, i) => (
-          <mesh
-            key={i}
-            castShadow
-            position={[Math.cos(angle) * 1.8, Math.sin(angle * 2) * 0.3, Math.sin(angle) * 1.8]}
-            rotation={[angle, angle * 1.5, 0]}
-          >
-            <octahedronGeometry args={[0.28, 0]} />
-            <meshPhysicalMaterial
-              color="#a855f7"
-              roughness={0.1}
-              transmission={0.85}
-              ior={1.6}
-              emissive="#9333ea"
-              emissiveIntensity={0.8}
-            />
-          </mesh>
-        ))}
       </group>
 
       {/* ================= МАГІЧНІ ЖЕРТОВНИКИ / СМОЛОСКИПИ З ВОГНЕМ ================= */}
@@ -197,7 +154,7 @@ export function FloatingIsland() {
 
       {/* ================= СУПУТНИКОВІ ШИРЯЮЧІ УЛАМКИ ================= */}
       <group ref={satellite1Ref} position={[11, 1, 0]}>
-        <mesh castShadow receiveShadow>
+        <mesh receiveShadow>
           <dodecahedronGeometry args={[1.5, 0]} />
           <meshStandardMaterial color="#334155" roughness={0.9} flatShading />
         </mesh>
@@ -208,7 +165,7 @@ export function FloatingIsland() {
       </group>
 
       <group ref={satellite2Ref} position={[-12, -1, 4]}>
-        <mesh castShadow receiveShadow>
+        <mesh receiveShadow>
           <dodecahedronGeometry args={[1.2, 0]} />
           <meshStandardMaterial color="#1e293b" roughness={0.95} flatShading />
         </mesh>

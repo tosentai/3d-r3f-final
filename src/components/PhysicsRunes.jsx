@@ -16,30 +16,30 @@ export function PhysicsRunes({ runes = [], onRuneClick, physicsApiRef }) {
   useEffect(() => {
     if (physicsApiRef) {
       physicsApiRef.current = {
-        applyShockwave: (origin = [0, 4.5, -8], power = 10) => {
+        applyShockwave: (origin = [0, 4.5, -8], power = 4.5) => {
           bodiesMapRef.current.forEach((body) => {
             if (!body) return
             try {
               const pos = body.translation()
               const dx = pos.x - origin[0]
               const dz = pos.z - origin[2]
-              const dist = Math.max(1.0, Math.sqrt(dx * dx + dz * dz))
-              const force = (power / dist) * 1.8
+              const dist = Math.max(1.5, Math.sqrt(dx * dx + dz * dz))
+              const force = (power / dist) * 0.9
 
-              // Імпульс спрямований горизонтально по поверхні острова від порталу
+              // М'який імпульс по поверхні острова від порталу
               body.applyImpulse(
                 {
                   x: (dx / dist) * force,
-                  y: Math.random() * 0.8 + 0.3, // М'який підйом без вильоту в небо
+                  y: Math.random() * 0.3 + 0.1, // Дуже легкий підйом
                   z: (dz / dist) * force,
                 },
                 true
               )
               body.applyTorqueImpulse(
                 {
-                  x: (Math.random() - 0.5) * 1.5,
-                  y: (Math.random() - 0.5) * 1.5,
-                  z: (Math.random() - 0.5) * 1.5,
+                  x: (Math.random() - 0.5) * 0.6,
+                  y: (Math.random() - 0.5) * 0.6,
+                  z: (Math.random() - 0.5) * 0.6,
                 },
                 true
               )

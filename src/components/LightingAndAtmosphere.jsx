@@ -13,43 +13,43 @@ import * as THREE from 'three'
 export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
   const sunLightRef = useRef()
 
-  // М'які, приємні для очей конфігурації доби
+  // М'які, спокійні для очей конфігурації доби
   const config = {
     noon: {
-      sunColor: '#fef3c7',
-      sunIntensity: 1.15,
-      sunPos: [10, 16, 8],
-      skyColor: '#60a5fa',
+      sunColor: '#e2e8f0',
+      sunIntensity: 0.72,
+      sunPos: [8, 14, 6],
+      skyColor: '#38bdf8',
       groundColor: '#1e293b',
-      hemiIntensity: 0.5,
-      turbidity: 2.5,
-      rayleigh: 0.28,
-      mieCoefficient: 0.002,
-      mieDirectionalG: 0.65,
+      hemiIntensity: 0.35,
+      turbidity: 1.5,
+      rayleigh: 0.16, // Кардинально знижено розсіювання, що сліпило очі
+      mieCoefficient: 0.001,
+      mieDirectionalG: 0.55,
       sparkleColor: '#38bdf8',
-      fogColor: '#090e1a',
+      fogColor: '#070c16',
     },
     sunset: {
-      sunColor: '#fb923c',
-      sunIntensity: 0.95,
-      sunPos: [14, 5, -12],
-      skyColor: '#a855f7',
+      sunColor: '#f97316',
+      sunIntensity: 0.65,
+      sunPos: [12, 4, -14],
+      skyColor: '#7c3aed',
       groundColor: '#2e1065',
-      hemiIntensity: 0.4,
-      turbidity: 4.2,
-      rayleigh: 0.65,
-      mieCoefficient: 0.005,
-      mieDirectionalG: 0.75,
+      hemiIntensity: 0.3,
+      turbidity: 2.8,
+      rayleigh: 0.35, // М'який теплий вечір без яскравого сонячного диску
+      mieCoefficient: 0.003,
+      mieDirectionalG: 0.65,
       sparkleColor: '#fbbf24',
-      fogColor: '#120a1c',
+      fogColor: '#0f0817',
     },
     night: {
       sunColor: '#93c5fd',
-      sunIntensity: 0.55,
+      sunIntensity: 0.45,
       sunPos: [-10, 16, 10],
       skyColor: '#1e3a8a',
       groundColor: '#020617',
-      hemiIntensity: 0.3,
+      hemiIntensity: 0.25,
       turbidity: 10,
       rayleigh: 0.2,
       mieCoefficient: 0.001,
@@ -72,7 +72,7 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
         intensity={config.hemiIntensity}
       />
 
-      {/* 2. Головне спрямоване джерело світла із оптимізованими тінями */}
+      {/* 2. Головне спрямоване джерело світла із оптимізованим frustum */}
       <directionalLight
         ref={sunLightRef}
         position={config.sunPos}
@@ -81,12 +81,12 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
-        shadow-camera-near={0.5}
-        shadow-camera-far={60}
-        shadow-camera-left={-14}
-        shadow-camera-right={14}
-        shadow-camera-top={14}
-        shadow-camera-bottom={-14}
+        shadow-camera-near={1}
+        shadow-camera-far={50}
+        shadow-camera-left={-11}
+        shadow-camera-right={11}
+        shadow-camera-top={11}
+        shadow-camera-bottom={-11}
         shadow-bias={-0.00015}
         shadow-normalBias={0.02}
       />
@@ -95,12 +95,12 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
       <directionalLight
         position={[-config.sunPos[0], -config.sunPos[1] * 0.5, -config.sunPos[2]]}
         color={config.skyColor}
-        intensity={0.25}
+        intensity={0.2}
       />
 
       {/* 4. Небосхил (Sky) або Зоряне небо (Stars) */}
       {timeOfDay === 'night' ? (
-        <Stars radius={80} depth={50} count={3500} factor={4} saturation={0.5} fade speed={1} />
+        <Stars radius={80} depth={50} count={2500} factor={3.5} saturation={0.5} fade speed={0.8} />
       ) : (
         <Sky
           sunPosition={config.sunPos}
@@ -111,13 +111,13 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
         />
       )}
 
-      {/* 5. Магічні світлові пилинки/частинки в повітрі */}
+      {/* 5. Легкі магічні світлові частинки в повітрі (оптимізовано для FPS) */}
       <Sparkles
-        count={80}
-        scale={20}
-        size={3}
-        speed={0.3}
-        opacity={0.55}
+        count={35}
+        scale={18}
+        size={2.8}
+        speed={0.25}
+        opacity={0.45}
         color={config.sparkleColor}
       />
 

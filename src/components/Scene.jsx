@@ -132,7 +132,7 @@ export function Scene({
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 0.95,
+          toneMappingExposure: 0.72, // М'яка, комфортна для очей яскравість
           outputColorSpace: THREE.SRGBColorSpace,
           powerPreference: 'high-performance'
         }}

@@ -112,7 +112,7 @@ export function CelestialPortal({
 
       {/* Ударна хвиля (розширюється при кліку ЛКМ) */}
       <mesh ref={shockwaveRef} position={[0, 0, 0.05]} visible={false}>
-        <ringGeometry args={[2.7, 3.2, 64]} />
+        <ringGeometry args={[2.7, 3.2, 36]} />
         <meshBasicMaterial
           color="#38bdf8"
           transparent
@@ -130,7 +130,7 @@ export function CelestialPortal({
         onPointerOut={() => setHovered(false)}
         cursor="pointer"
       >
-        <circleGeometry args={[2.8, 64]} />
+        <circleGeometry args={[2.8, 36]} />
         <shaderMaterial
           vertexShader={PortalVertexShader}
           fragmentShader={PortalFragmentShader}
@@ -144,14 +144,14 @@ export function CelestialPortal({
       {/* Підказка при наведенні (світіння контуру) */}
       {hovered && (
         <mesh position={[0, 0, 0.02]}>
-          <ringGeometry args={[2.75, 2.9, 64]} />
+          <ringGeometry args={[2.75, 2.9, 36]} />
           <meshBasicMaterial color="#67e8f9" transparent opacity={0.6} />
         </mesh>
       )}
 
       {/* Примітив: Зовнішнє масивне кам'яне кільце */}
       <mesh castShadow receiveShadow>
-        <torusGeometry args={[3.0, 0.28, 16, 64]} />
+        <torusGeometry args={[3.0, 0.28, 12, 36]} />
         <meshStandardMaterial
           color="#1e293b"
           roughness={0.8}
@@ -161,7 +161,7 @@ export function CelestialPortal({
 
       {/* Примітив: Внутрішнє обертове золоте рунічне кільце */}
       <mesh ref={outerRingRef}>
-        <torusGeometry args={[2.85, 0.08, 12, 48]} />
+        <torusGeometry args={[2.85, 0.08, 10, 32]} />
         <meshStandardMaterial
           color="#f59e0b"
           roughness={0.25}
@@ -173,7 +173,7 @@ export function CelestialPortal({
 
       {/* Примітив: Тонке концентричне кільце зворотної ротації */}
       <mesh ref={innerRingRef}>
-        <torusGeometry args={[2.55, 0.04, 8, 36]} />
+        <torusGeometry args={[2.55, 0.04, 8, 28]} />
         <meshStandardMaterial
           color="#38bdf8"
           roughness={0.1}

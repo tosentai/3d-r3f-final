@@ -97,14 +97,14 @@ export default function App() {
     }
   }, [])
 
-  // Клік по порталу: гравітаційна хвиля та виліт нового предмета
+  // Клік по порталу: м'яка гравітаційна хвиля та вихід нового предмета
   const handlePortalClick = useCallback(() => {
-    // 1. Ударна хвиля відштовхує всі існуючі предмети на острові
+    // 1. М'яка ударна хвиля (зменшена сила)
     if (physicsApiRef.current) {
-      physicsApiRef.current.applyShockwave([0, 4.4, -8], 14)
+      physicsApiRef.current.applyShockwave([0, 4.4, -8], 4.5)
     }
 
-    // 2. Портал викидає новий магічний артефакт уперед
+    // 2. Портал плавно випускає новий магічний артефакт уперед
     const types = ['chest', 'orb', 'chalice', 'obelisk']
     const randomType = types[Math.floor(Math.random() * types.length)]
     const newId = Date.now()
@@ -112,18 +112,18 @@ export default function App() {
     const launchedItem = {
       id: newId,
       type: randomType,
-      position: [(Math.random() - 0.5) * 0.8, 3.8, -7.0],
+      position: [(Math.random() - 0.5) * 0.6, 3.6, -7.0],
       initialImpulse: {
-        x: (Math.random() - 0.5) * 1.5,
-        y: -0.6, // Спрямовано вперед-вниз по сходах до центрального вівтаря, а не вгору
-        z: 9.5,  // Потужний рух прямо в сторону центрального артефакту
+        x: (Math.random() - 0.5) * 0.8,
+        y: -0.2, // Плавний спуск по сходах
+        z: 4.2,  // Помірний м'який рух уперед до центру
       },
       color: '#38bdf8',
       emissive: '#0284c7',
       size: 1.0,
       mass: 1.5,
-      restitution: randomType === 'orb' ? 0.75 : 0.4,
-      friction: 0.6,
+      restitution: randomType === 'orb' ? 0.65 : 0.35,
+      friction: 0.65,
     }
 
     setRunes((prev) => [...prev, launchedItem])
