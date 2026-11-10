@@ -52,7 +52,7 @@ export default function App() {
   const gravity = {
     earth: [0, -9.81, 0],
     moon: [0, -2.5, 0],
-    zero: [0, 2.8, 0], // Антигравітаційне підняття уламків у повітря!
+    zero: [0, -0.4, 0], // М'яке невагоме ширяння над островом (без відлітання вгору)
   }[gravityPreset] || [0, -9.81, 0]
 
   // Додавання нового предмета (скриня, сфера, чаша, обеліск)
@@ -112,11 +112,11 @@ export default function App() {
     const launchedItem = {
       id: newId,
       type: randomType,
-      position: [ (Math.random() - 0.5) * 1.5, 4.4, -7.0 ],
+      position: [(Math.random() - 0.5) * 0.8, 3.8, -7.0],
       initialImpulse: {
-        x: (Math.random() - 0.5) * 3,
-        y: Math.random() * 2 + 2.5,
-        z: Math.random() * 3 + 8.5, // Потужний політ уперед на терасу острова!
+        x: (Math.random() - 0.5) * 1.5,
+        y: -0.6, // Спрямовано вперед-вниз по сходах до центрального вівтаря, а не вгору
+        z: 9.5,  // Потужний рух прямо в сторону центрального артефакту
       },
       color: '#38bdf8',
       emissive: '#0284c7',

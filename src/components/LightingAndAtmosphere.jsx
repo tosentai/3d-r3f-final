@@ -72,17 +72,17 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
         intensity={config.hemiIntensity}
       />
 
-      {/* 2. Головне спрямоване джерело світла із тінями (DirectionalLight) */}
+      {/* 2. Головне спрямоване джерело світла із оптимізованими тінями */}
       <directionalLight
         ref={sunLightRef}
         position={config.sunPos}
         color={config.sunColor}
         intensity={config.sunIntensity}
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-camera-near={0.5}
-        shadow-camera-far={65}
+        shadow-camera-far={60}
         shadow-camera-left={-14}
         shadow-camera-right={14}
         shadow-camera-top={14}
@@ -121,14 +121,15 @@ export function LightingAndAtmosphere({ timeOfDay = 'sunset' }) {
         color={config.sparkleColor}
       />
 
-      {/* 6. Контактні м'які тіні під островом */}
+      {/* 6. Контактні м'які тіні під островом (frames=1 для максимальної продуктивності) */}
       <ContactShadows
         position={[0, -7.5, 0]}
         opacity={0.65}
         scale={28}
         blur={2}
         far={15}
-        resolution={1024}
+        resolution={512}
+        frames={1}
         color="#000000"
       />
     </>

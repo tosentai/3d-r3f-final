@@ -285,16 +285,14 @@ function Brazier({ position }) {
         />
       </mesh>
 
-      {/* Світло від вогню */}
+      {/* Світло від вогню (без важких тіней для максимального FPS) */}
       <pointLight
         ref={lightRef}
         position={[0, 1.2, 0]}
         color="#fb923c"
-        distance={8}
+        distance={7}
         decay={2}
-        intensity={1.6}
-        castShadow
-        shadow-bias={-0.001}
+        intensity={1.4}
       />
     </group>
   )

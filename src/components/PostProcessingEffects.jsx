@@ -16,7 +16,7 @@ export function PostProcessingEffects({
   bloomIntensity = 0.8
 }) {
   return (
-    <EffectComposer disableNormalPass multisampling={4}>
+    <EffectComposer disableNormalPass multisampling={0}>
       {/* 1. М'яке вибіркове світіння (Bloom) */}
       {enableBloom && (
         <Bloom

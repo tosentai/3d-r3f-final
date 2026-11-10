@@ -126,12 +126,13 @@ export function Scene({
   return (
     <div className="w-full h-full absolute inset-0">
       <Canvas
+        dpr={[1, 1.5]}
         shadows={{ type: THREE.PCFSoftShadowMap }}
         camera={{ position: [0, 7.5, 17], fov: 45, near: 0.1, far: 200 }}
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 0.95, // Оптимізована експозиція без засліплення
+          toneMappingExposure: 0.95,
           outputColorSpace: THREE.SRGBColorSpace,
           powerPreference: 'high-performance'
         }}
